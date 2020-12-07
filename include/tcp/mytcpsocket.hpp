@@ -12,12 +12,21 @@
 
 using namespace std;
 
-class MySocket{
+class MyTcpSocket{
+protected:
+	WSADATA m_wsa_data;
+	sockaddr_in m_serveraddr;
+
 public:
-	MySocket(){}
+	SOCKET m_sock;
+
+	MyTcpSocket(){
+		m_sock = -1;
+	}
 
 	// 发送报文，buf_len取0发送字符流，发送二进制数据取二进制数据块大小
 	bool tcpSend(SOCKET sock, const char* buffer, const int buf_len=0) {
+		if (sock == -1) return false;
 		fd_set tmpfd;
 
 		FD_ZERO(&tmpfd);
@@ -53,16 +62,20 @@ public:
 	}
 	// 接收报文，s_timeout为超时时间，取0为无限等待
 	bool tcpRecv(SOCKET sock, char* buffer, const int s_timeout=0) {
-		fd_set tmpfd;
+		if (sock == -1) return false;
 
-		FD_ZERO(&tmpfd);
-		FD_SET(sock, &tmpfd);
+		if (s_timeout > 0) {
+			fd_set tmpfd;
 
-		struct timeval timeout;
-		timeout.tv_sec = s_timeout;
-		timeout.tv_usec = 0;
+			FD_ZERO(&tmpfd);
+			FD_SET(sock, &tmpfd);
 
-		if (select((int)sock + 1, 0, &tmpfd, 0, &timeout) <= 0) return false;
+			struct timeval timeout;
+			timeout.tv_sec = s_timeout;
+			timeout.tv_usec = 0;
+
+			if (select((int)sock + 1, 0, &tmpfd, 0, &timeout) <= 0) return false;
+		}
 
 		int buf_len = 0;
 		if (recv(sock, (char*)&buf_len, 4, 0) == SOCKET_ERROR) return false;
@@ -81,7 +94,9 @@ public:
 		return true;
 	}
 
-	~MySocket(){}
+	~MyTcpSocket(){
+		WSACleanup();
+	}
 
 
 };
