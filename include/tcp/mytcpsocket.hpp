@@ -74,7 +74,7 @@ public:
 			timeout.tv_sec = s_timeout;
 			timeout.tv_usec = 0;
 
-			if (select((int)sock + 1, 0, &tmpfd, 0, &timeout) <= 0) return false;
+			if (select((int)sock + 1, &tmpfd, 0, 0, &timeout) <= 0) return false;
 		}
 
 		int buf_len = 0;
